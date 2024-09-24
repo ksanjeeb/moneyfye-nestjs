@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
-import { ApiBody } from '@nestjs/swagger';
 
 @Controller('accounts')
 export class AccountsController {

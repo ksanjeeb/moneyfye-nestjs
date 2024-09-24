@@ -1,4 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { Accounts } from 'src/accounts/entities/account.entity';
+import { Transactions } from 'src/transaction/entities/transaction.entity';
 import { User } from 'src/user/entities/user.entity';
 
 require('dotenv').config();
@@ -38,7 +40,7 @@ class ConfigService {
       username: this.getValue('POSTGRES_USER'),
       password: this.getValue('POSTGRES_PASSWORD'),
       database: this.getValue('POSTGRES_DATABASE'),
-      entities: [User],
+      entities: [User, Accounts, Transactions],
       synchronize: false,
       logging:true,
       ssl: { rejectUnauthorized:  false },

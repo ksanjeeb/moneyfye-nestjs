@@ -1,9 +1,12 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('accounts')
-export class Account {
+export class Accounts {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  user_id: string;
 
   @Column()
   group: string;
@@ -11,7 +14,7 @@ export class Account {
   @Column()
   name: string;
 
-  @Column('jsonb')
+  @Column('json')
   balance: { [currencyCode: string]: number }; 
 
   @Column('simple-array')
