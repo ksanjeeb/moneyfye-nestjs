@@ -1,18 +1,23 @@
-import { Column, Entity, PrimaryColumn } from "typeorm";
-import { v4 as uuidv4 } from 'uuid';
+import { PrimaryGeneratedColumn, Column, OneToMany, Entity } from 'typeorm';
+import { Exclude } from 'class-transformer';
+import { Accounts } from 'src/accounts/entities/account.entity';
+import { Transactions } from 'src/transaction/entities/transaction.entity';
 
 @Entity()
 export class User {
-    @PrimaryColumn('uuid')
-    id?: number;
-  
-    @Column({ type: 'varchar', length: 100 })
-    username: string;
-  
-    @Column({ type: 'varchar' })
-    password: string;
+  @PrimaryGeneratedColumn('uuid')
+  id?: number;
 
-    constructor(){
-        this.id = uuidv4();
-    }
+  @Column({ type: 'varchar', length: 100 })
+  username: string;
+
+  @Exclude()
+  @Column({ type: 'varchar' })
+  password: string;
+
+  @OneToMany(() => Accounts, (accounts) => accounts.user)
+  accounts: Accounts[];
+
+  @OneToMany(() => Transactions, (transaction) => transaction.user)
+  transactions: Transactions[];
 }

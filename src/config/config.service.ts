@@ -46,7 +46,6 @@ class ConfigService {
       ssl: { rejectUnauthorized:  false },
     };
   }
-
 }
 
 const configService = new ConfigService(process.env)

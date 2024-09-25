@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 
-@Entity('transactions') 
+@Entity('transactions')
 export class Transactions {
   @PrimaryGeneratedColumn('uuid')
   transaction_id: string;
@@ -17,7 +18,11 @@ export class Transactions {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @Column({ type: 'enum', enum: ['income', 'expense', 'transfer_in', 'other'], default: 'other' })
+  @Column({
+    type: 'enum',
+    enum: ['income', 'expense', 'transfer_in', 'other'],
+    default: 'other',
+  })
   transaction_type: 'income' | 'expense' | 'transfer_in' | string;
 
   @Column({ type: 'timestamp' })
@@ -26,7 +31,7 @@ export class Transactions {
   @Column({ type: 'varchar', length: 255 })
   description: string;
 
-  @Column('simple-array') 
+  @Column('simple-array')
   tags: string[];
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -37,4 +42,7 @@ export class Transactions {
 
   @Column({ type: 'boolean', default: false, nullable: true })
   hide?: boolean;
+
+  @ManyToOne(() => User, (user) => user.transactions, {cascade:true})
+  user: User;
 }

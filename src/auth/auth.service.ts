@@ -12,7 +12,6 @@ export class AuthService {
 
   async validateUser(username: string, password: string): Promise<User> {
     const user: User = await this.usersService.findByUserName(username);
-    console.log(user)
     if (!user) {
       throw new BadRequestException('User not found');
     }
@@ -23,7 +22,7 @@ export class AuthService {
     return user;
   }
 
-  async login(user: User): Promise<any> {
+  async login(user: Partial<User>): Promise<any> {
     const payload = { username: user.username, id: user.id };
     const token = this.jwtService.sign(payload)
     return { access_token:  token , message: 'Login successful' };
@@ -35,8 +34,12 @@ export class AuthService {
       throw new BadRequestException('User already exists');
     }
     const hashedPassword = await bcrypt.hash(user.password, 10);
-    const newUser: User = { ...user, password: hashedPassword };
-    await this.usersService.create(newUser);
-    return this.login(newUser );
+    const newUser = new User();
+    newUser.username = user.username;
+    newUser.password = hashedPassword;
+    // newUser.accounts = []; 
+    newUser.transactions = []; 
+    await this.usersService.create(newUser); 
+    return this.login(newUser); 
   }
 }

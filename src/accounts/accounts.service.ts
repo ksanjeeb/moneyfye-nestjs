@@ -14,7 +14,6 @@ export class AccountsService {
 
   async create(createAccountDto: CreateAccountDto): Promise<Accounts> {
     const newAccount = this.accountRepository.create(createAccountDto);
-    console.log(newAccount)
     return await this.accountRepository.save(newAccount); 
   }
 
