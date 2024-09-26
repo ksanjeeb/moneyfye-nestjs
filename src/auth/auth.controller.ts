@@ -11,7 +11,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { Public } from './decorators/public.decorator';
 import { ApiTags } from '@nestjs/swagger';
-import { User } from 'src/user/entities/user.entity';
 
 @Public()
 @Controller('auth')
@@ -22,9 +21,9 @@ export class AuthController {
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(
-    @Body() loginDto: CreateUserDto,
+    @Body() loginDto: CreateUserDto, @Request() req
   ): Promise<CreateUserDto | BadRequestException> {
-    return this.authService.login(loginDto);
+    return this.authService.login({...loginDto, ...req?.user});
   }
 
   @Post('register')
