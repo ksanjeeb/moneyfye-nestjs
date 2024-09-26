@@ -19,6 +19,6 @@ export class Accounts {
   @Column('simple-array')
   currencies: string[];
 
-  @ManyToOne(() => User, (user) => user.accounts, { cascade: true })
+  @ManyToOne(() => User, (user) => user.accounts ,{eager:false})
   user: User;
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,44 +15,72 @@ export class TransactionService {
   constructor(
     @InjectRepository(Transactions)
     private transactionRepository: Repository<Transactions>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
-  async create(
-    createTransactionDto: CreateTransactionDto,
-    userId: any,
-  ): Promise<Transactions> {
+  private async findUserById(userId: any): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    return user;
+  }
+
+  private async findTransactionById(id: string, userId: any): Promise<Transactions> {
+    const transaction = await this.transactionRepository.findOne({
+      where: { transaction_id: id, user: { id: userId } },
+    });
+    if (!transaction) {
+      throw new NotFoundException(
+        `Transaction with ID ${id} not found or not accessible by this user`,
+      );
+    }
+    return transaction;
+  }
+
+  async create(createTransactionDto: CreateTransactionDto, userId: any): Promise<string> {
+    const user = await this.findUserById(userId);
     const newTransaction = this.transactionRepository.create(createTransactionDto);
-    return await this.transactionRepository.save(newTransaction);
+    newTransaction.user = user;
+    await this.transactionRepository.save(newTransaction);
+    return 'Transaction created successfully';
   }
 
   async findAll(): Promise<Transactions[]> {
     return await this.transactionRepository.find();
   }
 
-  async findOne(id: string): Promise<Transactions> {
-    const transaction = await this.transactionRepository.findOne({
-      where: { transaction_id: String(id) },
+  async listTransactions(userId: any): Promise<Transactions[]> {
+    const transactions = await this.transactionRepository.find({
+      where: { user: { id: userId } },
     });
-    if (!transaction) {
-      throw new NotFoundException(`Transaction with ID ${id} not found`);
+
+    if (transactions.length === 0) {
+      throw new NotFoundException(`No transactions found for User ID ${userId}`);
     }
-    return transaction;
+
+    return transactions;
+  }
+
+  async findOne(id: string, userId: string): Promise<Transactions> {
+    return await this.findTransactionById(id, userId);
   }
 
   async update(
     id: string,
     updateTransactionDto: UpdateTransactionDto,
-  ): Promise<Transactions> {
-    const transaction = await this.findOne(id);
-    const updatedTransaction = this.transactionRepository.merge(
-      transaction,
-      updateTransactionDto,
-    );
-    return await this.transactionRepository.save(updatedTransaction);
+    userId: string,
+  ): Promise<string> {
+    const transaction = await this.findTransactionById(id, userId);
+    this.transactionRepository.merge(transaction, updateTransactionDto);
+    await this.transactionRepository.save(transaction);
+    return 'Transaction updated successfully';
   }
 
-  async remove(id: string): Promise<void> {
-    const transaction = await this.findOne(id);
+  async remove(id: string, userId: string): Promise<string> {
+    const transaction = await this.findTransactionById(id, userId);
     await this.transactionRepository.remove(transaction);
+    return 'Transaction removed successfully';
   }
 }

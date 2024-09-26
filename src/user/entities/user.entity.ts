@@ -12,12 +12,12 @@ export class User {
   username: string;
 
   @Exclude()
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar' , select:false})
   password: string;
 
-  @OneToMany(() => Accounts, (accounts) => accounts.user)
+  @OneToMany(() => Accounts, (accounts) => accounts.user, {cascade:true, eager: true })
   accounts: Accounts[];
 
-  @OneToMany(() => Transactions, (transaction) => transaction.user)
+  @OneToMany(() => Transactions, (transaction) => transaction.user, { cascade:true, eager: true })
   transactions: Transactions[];
 }

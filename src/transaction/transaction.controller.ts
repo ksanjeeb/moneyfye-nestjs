@@ -24,8 +24,7 @@ export class TransactionController {
     @Body() createTransactionDto: CreateTransactionDto,
     @Request() req: any,
   ) {
-    const userId = req.user.id;
-    return this.transactionService.create(createTransactionDto, userId);
+    return this.transactionService.create(createTransactionDto, req.user.id);
   }
 
   @Get()
@@ -33,21 +32,31 @@ export class TransactionController {
     return this.transactionService.findAll();
   }
 
+  @Get('list')
+  listTransactions(@Request() req: any) {
+    return this.transactionService.listTransactions(req.user.id);
+  }
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transactionService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req: any) {
+    return this.transactionService.findOne(id, req.user.id);
   }
 
   @Patch(':id')
   update(
     @Param('id') id: string,
     @Body() updateTransactionDto: UpdateTransactionDto,
+    @Request() req: any,
   ) {
-    return this.transactionService.update(id, updateTransactionDto);
+    return this.transactionService.update(
+      id,
+      updateTransactionDto,
+      req.user.id,
+    );
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.transactionService.remove(id);
+  remove(@Param('id') id: string, @Request() req: any) {
+    return this.transactionService.remove(id, req.user.id);
   }
 }

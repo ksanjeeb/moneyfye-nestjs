@@ -37,7 +37,7 @@ export class AuthService {
     const newUser = new User();
     newUser.username = user.username;
     newUser.password = hashedPassword;
-    // newUser.accounts = []; 
+    newUser.accounts = []; 
     newUser.transactions = []; 
     await this.usersService.create(newUser); 
     return this.login(newUser); 

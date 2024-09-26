@@ -43,6 +43,6 @@ export class Transactions {
   @Column({ type: 'boolean', default: false, nullable: true })
   hide?: boolean;
 
-  @ManyToOne(() => User, (user) => user.transactions, {cascade:true})
+  @ManyToOne(() => User, (user) => user.transactions,{eager:false})
   user: User;
 }
