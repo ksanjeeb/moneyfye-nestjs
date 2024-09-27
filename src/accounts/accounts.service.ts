@@ -28,36 +28,50 @@ export class AccountsService {
       where: { id, user: { id: userId } },
     });
     if (!account) {
-      throw new NotFoundException(`Account with ID ${id} not found or not accessible by this user`);
+      throw new NotFoundException(
+        `Account with ID ${id} not found or not accessible by this user`,
+      );
     }
     return account;
   }
 
-  async create(createAccountDto: CreateAccountDto, userId: string): Promise<string> {
+  async create(
+    createAccountDto: CreateAccountDto,
+    userId: string,
+  ): Promise<any> {
     const user = await this.findUserById(userId);
     const newAccount = this.accountRepository.create(createAccountDto);
-    newAccount.user = user; 
+    newAccount.user = user;
     await this.accountRepository.save(newAccount);
-    return 'Account created successfully';
+    return {message:'Account created successfully', statusCode:200};
   }
 
   async findAll(): Promise<Accounts[]> {
     return await this.accountRepository.find();
   }
 
-  async listAccounts(userId: any): Promise<Accounts[]> {
-    const accounts = await this.accountRepository.find({ where: { user: { id: userId } } });
-    if (accounts.length === 0) {
+  async listAccounts(userId: any): Promise<{ data: Accounts[]; statusCode: number , message:string}> {
+    const accounts = await this.accountRepository.find({
+      where: { user: { id: userId } },
+    });
+
+    if (!accounts || accounts.length === 0) {
       throw new NotFoundException(`No accounts found for User ID ${userId}`);
     }
-    return accounts;
+
+    return { data: accounts, statusCode: 200 , message:"Accounts fetched." };
   }
+
 
   async findOne(id: string, userId: string): Promise<Accounts> {
     return await this.findAccountById(id, userId);
   }
 
-  async update(id: string, updateAccountDto: UpdateAccountDto, userId: string): Promise<string> {
+  async update(
+    id: string,
+    updateAccountDto: UpdateAccountDto,
+    userId: string,
+  ): Promise<string> {
     const account = await this.findAccountById(id, userId);
     Object.assign(account, updateAccountDto);
     await this.accountRepository.save(account);
@@ -69,4 +83,6 @@ export class AccountsService {
     await this.accountRepository.remove(account);
     return 'Account removed successfully';
   }
+
+
 }

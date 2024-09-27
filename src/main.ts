@@ -27,6 +27,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalGuards(new JwtGuard(app.get(Reflector)));
   app.use(cookieParser());
+  app.enableCors();
   app.useGlobalFilters(new AllExceptionsFilter());
   const config = new DocumentBuilder()
     .setTitle('Moneyfye')

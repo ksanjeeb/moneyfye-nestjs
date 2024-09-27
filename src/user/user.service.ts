@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -22,12 +22,25 @@ export class UserService {
   async findByUserName(username: string) {
     const user = await this.userRepository.findOne({
       where: { username: username },
+      select: ['id', 'username', 'password'],
     });
     return user;
   }
 
-  async listUser(){
-    return await this.userRepository.find();
+  // async listUser(){
+  //   return await this.userRepository.find();
+  // }
+
+  async userData(userId: any): Promise<{ data: User; statusCode: number , message:string}> {
+    const user = await this.userRepository.findOne({
+      where: {  id: userId  },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`No details found for User ID ${userId}`);
+    }
+
+    return { data: user, statusCode: 200 , message:"User details fetched." };
   }
 
   findOne(id: number) {
