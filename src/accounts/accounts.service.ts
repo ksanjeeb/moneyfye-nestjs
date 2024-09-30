@@ -5,6 +5,7 @@ import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { Accounts } from './entities/account.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Transactions } from 'src/transaction/entities/transaction.entity';
 
 @Injectable()
 export class AccountsService {
@@ -13,6 +14,8 @@ export class AccountsService {
     private readonly accountRepository: Repository<Accounts>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Transactions)
+    private transactionRepository: Repository<Transactions>,
   ) {}
 
   private async findUserById(userId: any): Promise<User> {
@@ -42,15 +45,36 @@ export class AccountsService {
     const user = await this.findUserById(userId);
     const newAccount = this.accountRepository.create(createAccountDto);
     newAccount.user = user;
-    await this.accountRepository.save(newAccount);
-    return {message:'Account created successfully', statusCode:200};
+
+    const res = await this.accountRepository.save(newAccount);
+    const new_transactions = Object.entries(createAccountDto?.balance)?.map(
+      ([key, value]: [string, number]) => ({
+        account_id: res?.id,
+        amount: value,
+        transaction_type: 'income',
+        date: new Date().toISOString().split('T')[0],
+        description: '',
+        tags: ['Initial deposit'],
+        related_source: null,
+        related_currency: key,
+        hide: false,
+        user: user,
+      }),
+    );
+    const newTransaction = await this.transactionRepository.create(new_transactions);
+    console.log(newTransaction)
+    await this.transactionRepository.save(newTransaction);
+
+    return { message: 'Account created successfully', statusCode: 200, data:res };
   }
 
   async findAll(): Promise<Accounts[]> {
     return await this.accountRepository.find();
   }
 
-  async listAccounts(userId: any): Promise<{ data: Accounts[]; statusCode: number , message:string}> {
+  async listAccounts(
+    userId: any,
+  ): Promise<{ data: Accounts[]; statusCode: number; message: string }> {
     const accounts = await this.accountRepository.find({
       where: { user: { id: userId } },
     });
@@ -59,9 +83,8 @@ export class AccountsService {
       throw new NotFoundException(`No accounts found for User ID ${userId}`);
     }
 
-    return { data: accounts, statusCode: 200 , message:"Accounts fetched." };
+    return { data: accounts, statusCode: 200, message: 'Accounts fetched.' };
   }
-
 
   async findOne(id: string, userId: string): Promise<Accounts> {
     return await this.findAccountById(id, userId);
@@ -71,11 +94,11 @@ export class AccountsService {
     id: string,
     updateAccountDto: UpdateAccountDto,
     userId: string,
-  ): Promise<string> {
+  ): Promise<{ statusCode: number; message: string }> {
     const account = await this.findAccountById(id, userId);
     Object.assign(account, updateAccountDto);
     await this.accountRepository.save(account);
-    return 'Account updated successfully';
+    return { statusCode: 200, message: 'Account updated successfully.' };
   }
 
   async remove(id: string, userId: string): Promise<string> {
@@ -83,6 +106,4 @@ export class AccountsService {
     await this.accountRepository.remove(account);
     return 'Account removed successfully';
   }
-
-
 }
