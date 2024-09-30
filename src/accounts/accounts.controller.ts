@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, Query, BadRequestException } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Accounts } from './entities/account.entity';
 
 @ApiTags('accounts')
 @ApiBearerAuth('defaultBearerAuth')
@@ -21,8 +22,22 @@ export class AccountsController {
   }
 
   @Get('list')
-  listAccounts(@Request() req: any) {
-    return this.accountsService.listAccounts(req.user.id);
+  async listAccounts(
+    @Request() req: any,
+    @Query('skip') skip: string = '0', 
+    @Query('limit') limit: string = '10',
+  ): Promise<{ data: Accounts[]; statusCode: number; message: string; total: number }> {
+    
+    const userId = req.user.id;
+
+    const parsedSkip = parseInt(skip, 10);
+    const parsedLimit = parseInt(limit, 10);
+
+    if (isNaN(parsedSkip) || isNaN(parsedLimit)) {
+      throw new BadRequestException('Invalid skip or limit values. They must be numbers.');
+    }
+
+    return await this.accountsService.listAccounts(userId, parsedSkip, parsedLimit);
   }
 
   @Get(':id')

@@ -56,17 +56,30 @@ export class TransactionService {
     return await this.transactionRepository.find();
   }
 
-  async listTransactions(userId: any): Promise<{ data: Transactions[]; statusCode: number , message:string}> {
-    const transactions = await this.transactionRepository.find({
+  async listTransactions(
+    userId: any, 
+    skip: number = 0, 
+    limit: number = 10
+  ): Promise<{ data: Transactions[]; statusCode: number; message: string; total: number }> {
+    
+    const [transactions, total] = await this.transactionRepository.findAndCount({
       where: { user: { id: userId } },
+      skip: skip,
+      take: limit,
     });
-
+  
     if (transactions.length === 0) {
       throw new NotFoundException(`No transactions found for User ID ${userId}`);
     }
-
-    return { data: transactions, statusCode: 200 , message:"Accounts fetched." };
+  
+    return { 
+      data: transactions, 
+      statusCode: 200, 
+      message: "Refreshed.", 
+      total: total,  
+    };
   }
+
 
   async findOne(id: string, userId: string): Promise<Transactions> {
     return await this.findTransactionById(id, userId);
@@ -119,7 +132,9 @@ export class TransactionService {
       user, 
     });
   
-    await this.transactionRepository.save(newTransaction);
+    const response = await this.transactionRepository.save(newTransaction);
+
+    return {statusCode:200, message:"Success!", data:response}
   }
 
 
@@ -152,7 +167,9 @@ export class TransactionService {
       related_currency: currency_code,
       user,
     });
-    await this.transactionRepository.save(newTransaction);
+    const response = await this.transactionRepository.save(newTransaction);
+
+    return {statusCode:200, message:"Success!", data:response}
   }
   
 
@@ -211,7 +228,10 @@ export class TransactionService {
       user,
     });
   
-    await this.transactionRepository.save(newTransaction);
+    const response = await this.transactionRepository.save(newTransaction);
+
+    return {statusCode:200, message:"Transfered!", data:response}
+
   }
 
 
@@ -267,9 +287,12 @@ export class TransactionService {
       }
     }
 
-    await this.transactionRepository.save(existingTransaction);
+    const response = await this.transactionRepository.save(existingTransaction);
     await this.accountService.update(account.id, { balance: account.balance }, userId);
     if (fromAccount) await this.accountService.update(fromAccount.id, { balance: fromAccount.balance }, userId);
     if (toAccount) await this.accountService.update(toAccount.id, { balance: toAccount.balance }, userId);
+
+    return {statusCode:200, message:"Updated!", data:response}
+
   }
 }

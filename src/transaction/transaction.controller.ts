@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   Request,
+  Query,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {  TransactionPayloadDto, TransferPayloadDto } from './dto/payload-transaction.dto';
+import {
+  TransactionPayloadDto,
+  TransferPayloadDto,
+} from './dto/payload-transaction.dto';
 
 @ApiTags('transactions')
 @ApiBearerAuth('defaultBearerAuth')
@@ -34,8 +38,16 @@ export class TransactionController {
   }
 
   @Get('list')
-  listTransactions(@Request() req: any) {
-    return this.transactionService.listTransactions(req.user.id);
+  listTransactions(
+    @Request() req: any,
+    @Query('skip') skip: string = '0',
+    @Query('limit') limit: string = '100',
+  ) {
+    return this.transactionService.listTransactions(
+      req.user.id,
+      parseInt(skip),
+      parseInt(limit),
+    );
   }
 
   @Get(':id')
@@ -61,8 +73,7 @@ export class TransactionController {
     return this.transactionService.remove(id, req.user.id);
   }
 
-
-  @Post("add-income")
+  @Post('add-income')
   addIncome(
     @Body() transactionPayload: TransactionPayloadDto,
     @Request() req: any,
@@ -70,7 +81,7 @@ export class TransactionController {
     return this.transactionService.addIncome(transactionPayload, req.user.id);
   }
 
-  @Post("add-expense")
+  @Post('add-expense')
   addExpense(
     @Body() transactionPayload: TransactionPayloadDto,
     @Request() req: any,
@@ -78,7 +89,7 @@ export class TransactionController {
     return this.transactionService.addExpense(transactionPayload, req.user.id);
   }
 
-  @Post("transfer")
+  @Post('transfer')
   transferMoney(
     @Body() transferPayload: TransferPayloadDto,
     @Request() req: any,
@@ -92,6 +103,10 @@ export class TransactionController {
     @Body() transactionPayload: TransactionPayloadDto,
     @Request() req: any,
   ) {
-    return this.transactionService.editTransaction(transactionPayload, req.user.id, id);
+    return this.transactionService.editTransaction(
+      transactionPayload,
+      req.user.id,
+      id,
+    );
   }
 }

@@ -73,19 +73,28 @@ export class AccountsService {
   }
 
   async listAccounts(
-    userId: any,
-  ): Promise<{ data: Accounts[]; statusCode: number; message: string }> {
-    const accounts = await this.accountRepository.find({
+    userId: any, 
+    skip: number = 0, 
+    limit: number = 10
+  ): Promise<{ data: Accounts[]; statusCode: number; message: string; total: number }> {
+    
+    const [accounts, total] = await this.accountRepository.findAndCount({
       where: { user: { id: userId } },
+      skip: skip,
+      take: limit,
     });
-
-    if (!accounts || accounts.length === 0) {
+  
+    if (accounts.length === 0) {
       throw new NotFoundException(`No accounts found for User ID ${userId}`);
     }
-
-    return { data: accounts, statusCode: 200, message: 'Accounts fetched.' };
+  
+    return {
+      data: accounts,
+      statusCode: 200,
+      message: 'Refreshed.',
+      total: total, // total number of accounts for the user
+    };
   }
-
   async findOne(id: string, userId: string): Promise<Accounts> {
     return await this.findAccountById(id, userId);
   }
