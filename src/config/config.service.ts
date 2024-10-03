@@ -41,7 +41,7 @@ class ConfigService {
       password: this.getValue('POSTGRES_PASSWORD'),
       database: this.getValue('POSTGRES_DATABASE'),
       entities: [User, Accounts, Transactions],
-      synchronize: true,
+      synchronize: false,
       logging:false,
       ssl: { rejectUnauthorized:  false },
     };

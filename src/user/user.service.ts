@@ -27,11 +27,11 @@ export class UserService {
     return user;
   }
 
-  // async listUser(){
-  //   return await this.userRepository.find();
-  // }
 
   async userData(userId: any): Promise<{ data: User; statusCode: number , message:string}> {
+    if (!userId) {
+      throw new UnauthorizedException(`No details found for User ID ${userId}`);
+    }
     const user:User = await this.userRepository.findOne({
       where: {  id: userId  },
     });

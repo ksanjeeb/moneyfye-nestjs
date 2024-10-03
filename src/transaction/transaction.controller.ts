@@ -8,12 +8,16 @@ import {
   Delete,
   Request,
   Query,
+  UnauthorizedException,
+  Res,
+  Req,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
+  ReportPayloadDTO,
   TransactionPayloadDto,
   TransferPayloadDto,
 } from './dto/payload-transaction.dto';
@@ -32,22 +36,32 @@ export class TransactionController {
     return this.transactionService.create(createTransactionDto, req.user.id);
   }
 
-  @Get()
-  findAll() {
-    return this.transactionService.findAll();
-  }
-
   @Get('list')
-  listTransactions(
+  async listTransactions(
     @Request() req: any,
     @Query('skip') skip: string = '0',
     @Query('limit') limit: string = '100',
+    @Query('start_date') startDate: string = '',
+    @Query('end_date') endDate: string = '',
+    @Query('transaction_type') transactionType: string = '',
   ) {
-    return this.transactionService.listTransactions(
+    if (!req.user || !req.user.id) {
+      throw new UnauthorizedException('User not found or not authenticated');
+    }
+
+    return await this.transactionService.listTransactions(
       req.user.id,
       parseInt(skip),
       parseInt(limit),
+      startDate,
+      endDate,
+      transactionType,
     );
+  }
+
+  @Post('report')
+  reportData(@Request() req: any, @Body() reportPayload: ReportPayloadDTO) {
+    return this.transactionService.listReports(req.user.id, reportPayload.year);
   }
 
   @Get(':id')
@@ -68,10 +82,10 @@ export class TransactionController {
     );
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string, @Request() req: any) {
-    return this.transactionService.remove(id, req.user.id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string, @Request() req: any) {
+  //   return this.transactionService.remove(id, req.user.id);
+  // }
 
   @Post('add-income')
   addIncome(
@@ -108,5 +122,14 @@ export class TransactionController {
       req.user.id,
       id,
     );
+  }
+
+  @Post('reports-download')
+  async getReports(
+    @Request() req: any,
+    @Res() res: Response,
+    @Query('type') type?: string,
+  ) {
+    return this.transactionService.generateXlxs(req.user.id, res, type);
   }
 }

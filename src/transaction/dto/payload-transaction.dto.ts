@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, IsArray, IsDateString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsArray, IsDateString, IsOptional, IsInt, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class TransactionPayloadDto {
@@ -68,4 +68,13 @@ export class TransferPayloadDto {
   @IsNotEmpty()
   @IsString()
   date: string;
+}
+
+
+export class ReportPayloadDTO {
+  @ApiProperty()
+  @IsInt()
+  @Min(1900) 
+  @Max(new Date().getFullYear())
+  year: number;
 }
