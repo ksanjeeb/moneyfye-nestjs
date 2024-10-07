@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,7 +16,7 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<{ message: string }> {
-    const newUser = this.userRepository.create({...createUserDto});
+    const newUser = this.userRepository.create({ ...createUserDto });
     await this.userRepository.save(newUser);
     return {
       message: 'User created successfully!',
@@ -27,27 +31,35 @@ export class UserService {
     return user;
   }
 
-
-  async userData(userId: any): Promise<{ data: User; statusCode: number , message:string}> {
+  async userData(
+    userId: any,
+  ): Promise<{ data: User; statusCode: number; message: string }> {
     if (!userId) {
       throw new UnauthorizedException(`No details found for User ID ${userId}`);
     }
-    const user:User = await this.userRepository.findOne({
-      where: {  id: userId  },
+    const user: User = await this.userRepository.findOne({
+      where: { id: userId },
     });
 
     if (!user) {
       throw new UnauthorizedException(`No details found for User ID ${userId}`);
     }
 
-    return { data: user, statusCode: 200 , message:"User details fetched." };
+    return { data: user, statusCode: 200, message: 'User details fetched.' };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+
+  async remove(id: number): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['accounts', 'transactions'],
+    });
+
+    if (user) {
+      await this.userRepository.remove(user);
+    } else {
+      throw new Error(`User with id ${id} not found`);
+    }
   }
 }

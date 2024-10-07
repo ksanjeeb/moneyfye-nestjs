@@ -11,16 +11,20 @@ import {
   UnauthorizedException,
   Res,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import {
+  FileUploadDto,
   ReportPayloadDTO,
   TransactionPayloadDto,
   TransferPayloadDto,
 } from './dto/payload-transaction.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('transactions')
 @ApiBearerAuth('defaultBearerAuth')
@@ -131,5 +135,17 @@ export class TransactionController {
     @Query('type') type?: string,
   ) {
     return this.transactionService.generateXlxs(req.user.id, res, type);
+  }
+
+
+  @Post('excel-parse')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'List of transactions.',
+    type: FileUploadDto,
+  })
+  uploadFile(@UploadedFile() file) {
+    return this.transactionService.parseExcel(file);
   }
 }

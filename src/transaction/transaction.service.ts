@@ -590,11 +590,138 @@ export class TransactionService {
       const combinedCsv = `Accounts:\n${accountsCsv}\n\nTransactions:\n${transactionsCsv}`;
       return res.send(combinedCsv);
     } else {
-      return res
-        .status(400)
-        .send({
-          error: 'Unsupported file type. Please choose "xlsx" or "csv".',
-        });
+      return res.status(400).send({
+        error: 'Unsupported file type. Please choose "xlsx" or "csv".',
+      });
     }
+  }
+
+  async parseExcel(file: any): Promise<{data:CreateTransactionDto[], message:string, statusCode:number}> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(file.buffer);
+    const worksheet = workbook.worksheets[0];
+    const transactions: CreateTransactionDto[] = [];
+    let headerMap: { [key: string]: number } = {};
+    let errorRows:any[] = []
+
+    worksheet.eachRow((row: any, rowNumber: number) => {
+      if (rowNumber === 1) {
+        row.eachCell((cell: any, colNumber: number) => {
+          const headerValue = cell.value
+            ? cell.value.toString().trim().toLowerCase()
+            : '';
+          switch (headerValue) {
+            case 'transaction id':
+            case 'transaction_id':
+            case 'id':
+              headerMap['transaction_id'] = colNumber;
+              break;
+            case 'account id':
+            case 'account_id':
+            case 'account':
+              headerMap['account_id'] = colNumber;
+              break;
+            case 'amount':
+            case 'transaction amount':
+              headerMap['amount'] = colNumber;
+              break;
+            case 'transaction type':
+            case 'type':
+            case 'transaction_type':
+              headerMap['transaction_type'] = colNumber;
+              break;
+            case 'date':
+            case 'transaction date':
+              headerMap['date'] = colNumber;
+              break;
+            case 'tags':
+            case 'transaction tags':
+              headerMap['tags'] = colNumber;
+              break;
+            case 'related currency':
+            case 'currency':
+            case 'related_currency':
+              headerMap['related_currency'] = colNumber;
+              break;
+            default:
+              console.warn(
+                `Unrecognized header: ${headerValue} in column ${colNumber}`,
+              );
+              break;
+          }
+        });
+
+        if (
+          !headerMap['transaction_id'] ||
+          !headerMap['account_id'] ||
+          !headerMap['amount'] ||
+          !headerMap['transaction_type'] ||
+          !headerMap['date']
+        ) {
+          console.error('Required headers are missing.');
+        }
+
+        return;
+      }
+
+      const getCellValue = (headerKey: string): any => {
+        const cell = row.getCell(headerMap[headerKey]);
+        return cell ? cell.value : null;
+      };
+
+      if (
+        headerMap['transaction_id'] &&
+        headerMap['account_id'] &&
+        headerMap['amount'] &&
+        headerMap['transaction_type'] &&
+        headerMap['date']
+      ) {
+        const transaction_id = getCellValue('transaction_id');
+        const account_id = getCellValue('account_id');
+        const amount = getCellValue('amount');
+        const transaction_type = getCellValue('transaction_type');
+        const date = getCellValue('date');
+
+        if (
+          transaction_id &&
+          account_id &&
+          amount &&
+          transaction_type &&
+          date
+        ) {
+          const transaction: CreateTransactionDto = {
+            account_id: account_id as string,
+            account_from: null,
+            account_to: null,
+            amount: amount as number,
+            transaction_type: transaction_type as string,
+            date: new Date(date).toISOString().split('T')[0], // Convert date to string
+            description: '',
+            tags: getCellValue('tags')
+              ? getCellValue('tags')
+                  .split(',')
+                  .map((tag: string) => tag.trim())
+              : [],
+            related_source: null,
+            related_currency: getCellValue('related_currency') as string,
+            hide: false,
+          };
+
+          transactions.push(transaction);
+        } else {
+           errorRows.push(rowNumber)
+        }
+      } else {
+          errorRows.push(rowNumber)
+      }
+    });
+
+    let message = "";
+
+    if(errorRows.length > 0){
+      message =` Row ${errorRows.join(", ")}: Missing required columns. Skipping row.`
+    }
+
+    return {data:transactions, statusCode:200, message: message || "Success"};
   }
 }

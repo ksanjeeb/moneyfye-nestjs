@@ -61,6 +61,7 @@ export class TransferPayloadDto {
 
   @ApiProperty({ description: 'Tags associated with the transfer', type: [String] })
   @IsArray()
+  @IsOptional()
   @IsString({ each: true })
   tags: string[];
 
@@ -77,4 +78,10 @@ export class ReportPayloadDTO {
   @Min(1900) 
   @Max(new Date().getFullYear())
   year: number;
+}
+
+
+export class FileUploadDto {
+  @ApiProperty({ type: 'string', format: 'binary' })
+  file: any;
 }

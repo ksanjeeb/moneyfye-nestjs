@@ -1,5 +1,11 @@
 import { User } from 'src/user/entities/user.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('transactions')
 export class Transactions {
@@ -43,7 +49,7 @@ export class Transactions {
   @Column({ type: 'boolean', default: false, nullable: true })
   hide?: boolean;
 
-  @ManyToOne(() => User, (user) => user.transactions,{eager:false})
+  @ManyToOne(() => User, (user) => user.transactions)
   user: User;
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
